@@ -71,7 +71,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Class1.cs" />
     <Compile Include="Models\DBEntity.cs" />
     <Compile Include="Models\Profile.cs" />
     <Compile Include="Models\ProfileType.cs" />
