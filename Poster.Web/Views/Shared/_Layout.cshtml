@@ -11,18 +11,18 @@
 
 </head>
 <body>
-    <div class="container body-content">
-        @RenderBody()
-    </div>
-    
     @Scripts.Render("~/bundles/jquery")
+ <div class="container body-content">
+     @RenderBody()
+ </div>
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
     <script src="https://cdn.datatables.net/1.10.7/js/jquery.dataTables.min.js"></script>
+
     <script>
-    $(document).ready(function () {
-    $('#ListTable').DataTable();
-    });
+        $(document).ready(function () {
+            $('#ListTable').DataTable();
+        });
     </script>
 
 </body>

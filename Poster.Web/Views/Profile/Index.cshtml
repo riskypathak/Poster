@@ -17,26 +17,32 @@
                     @Html.DropDownListFor(x => x.ProfileTypeID, new SelectList(ViewBag.ProfileTypeList, "Id", "Name"), new { @class = "form-control", @required = "required" })
                 </div>
             </div>
-            <div class="form-group row">
+            @*<div class="form-group row">
                 <div class="col-md-3">
-                    Username
+                    aap
+                        Username
                 </div>
                 <div class="col-md-9">
                     @Html.TextBoxFor(x => x.Username, new { @class = "form-control", @required = "required" })
                 </div>
             </div>
+            *@
             <div class="form-group row">
                 <div class="col-md-3"></div>
                 <div class="col-md-9">
                     <input type="submit" name="Register" value="Register" />
-
+                    @*<input type="button" name="name" onclick="fbLogin()" value="Register" />*@
                 </div>
             </div>
 
         </div>
     </div>
-    @Html.HiddenFor(x => x.Id)
-    <div  class="panel panel-default">
+@Html.HiddenFor(x => x.Id)
+    @Html.HiddenFor(x => x.AccessToken)
+    @Html.HiddenFor(x => x.UserId)
+    @Html.HiddenFor(x => x.Username)
+
+    <div class="panel panel-default">
         <div class="panel-heading">User Profile List</div>
         <div class="panel-body">
 
@@ -51,17 +57,15 @@
                 <tbody>
                     @foreach (var item in userProfileList)
                     {
-                        <tr>
-                            <td>
-                                @item.ProfileName.Name
-                            </td>
-                            <td>
-                                @item.Username
-                            </td>
-                            <td>
-                                <input type="button" name="name" onclick="DeleteProfile(@item.Id)" class="btn btn-primary" value="Unregister" />
-                            </td>
-                        </tr>
+                    <tr>
+                        <td>@item.ProfileName.Name
+                        </td>
+                        <td>@item.Username
+                        </td>
+                        <td>
+                            <input type="button" name="name" onclick="DeleteProfile(@item.Id)" class="btn btn-primary" value="Unregister" />
+                        </td>
+                    </tr>
 
                     }
                 </tbody>
@@ -70,15 +74,95 @@
         </div>
     </div>
 }
+@*<script src="//connect.facebook.net/en_US/all.js"></script>*@
 <script>
-     //EDIT CODE COMMENTED
+   
+    window.fbAsyncInit = function () {
+        FB.init({
+            appId: '1643946982507030',
+            xfbml: true,
+            version: 'v2.4'
+        });
+    };
+
+    (function (d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) { return; }
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));
+</script>
+<script>
+    //EDIT CODE COMMENTED
     //function EditProfile(profileTypeid, username, id) {
     //    $("#ProfileTypeID").val(profileTypeid);
     //    $("#Username").val(username);
     //    $("#Id").val(id)
     //}
     function DeleteProfile(id) {
-        if(confirm("Do you want to delete record?"))
-            location.href = "/Profile/Delete/"+id;
+        if (confirm("Do you want to delete record?"))
+            location.href = "/Profile/Delete/" + id;
     }
+
+    //Facebook Login
+    function fbLogin() {
+        FB.login(function (response) {
+            debugger;
+            var userId, accessToken, userName;
+            var data = {};
+            if (response.authResponse) {
+                userId = response.authResponse.userID;
+                accessToken = response.authResponse.accessToken;
+                FB.api('/me', function (response) {
+                    userName = response.name;
+                    data = {
+                        UserId: userId,
+                        AccessToken: accessToken,
+                        Username: userName,
+                        ProfileTypeID: $("#ProfileTypeID").val()
+                    }
+                    RegisterUser(data)
+                    FB.logout(function (response) {
+                        console.log('User Logout.');
+                    });
+                });
+
+            } else {
+                console.log('User cancelled login or did not fully authorize.');
+            }
+
+        });
+    }
+
+    function RegisterUser(data) {
+        var stringdata = JSON.stringify(data);
+        $.ajax({
+            type: "POST",
+            url: "/Profile/Add",
+            data: { stringdata: stringdata },
+            dataType: "json",
+            success: function (response) {
+                
+                if (response == "Success") {
+                    location.reload();
+                }
+                else if (response == "Already Exist")
+                {
+                    alert("User already exists");
+                }
+
+            },
+            error: function (err) {
+                alert("User was  not registered")
+            }
+        });
+    }
+ 
+    $(document).ready(function () {
+        if(location.href.indexOf('#access_token=')>0)
+        {
+            location.href=location.href.replace('#','');
+        }
+    });
 </script>
