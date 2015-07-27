@@ -71,7 +71,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\Config.cs" />
     <Compile Include="Models\DBEntity.cs" />
+    <Compile Include="Models\Photo.cs" />
     <Compile Include="Models\Profile.cs" />
     <Compile Include="Models\ProfileType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

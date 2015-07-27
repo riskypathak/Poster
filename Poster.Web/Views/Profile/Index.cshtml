@@ -12,21 +12,55 @@
         <div class="panel-heading">Add Profile</div>
         <div class="panel-body">
             <div class="form-group row">
+                <button type="button" class="btn btn-info btn-sm pull-right" style="margin-right: 20px;" data-toggle="modal" data-target="#myModal">Set Service Interval</button>
+                <!-- Modal -->
+                <div id="myModal" class="modal fade" role="dialog">
+                    <div class="modal-dialog">
+                        <!-- Modal content-->
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">Service Interval</h4>
+                            </div>
+                            <div class="modal-body">
+                                <div class="form-group row">
+                                    <div class="col-md-3">Time(In Minutes):</div>
+                                    <div class="col-md-9">
+                                        <input type="text" name="name" id="serviceinterval" value=" " />
+                                    </div>
+                                </div>
+                                <div class="form-group row">
+                                    <div class="col-md-3"></div>
+                                    <div class="col-md-9">
+                                        <input type="button" name="name" value="Save" onclick="SaveServiceInterval()" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!--Modal HTML end-->
+            </div>
+
+
+            <div class="form-group row">
                 <div class="col-md-3">Profile Type:</div>
                 <div class="col-md-9">
-                    @Html.DropDownListFor(x => x.ProfileTypeID, new SelectList(ViewBag.ProfileTypeList, "Id", "Name"), new { @class = "form-control", @required = "required" })
+                    @Html.DropDownListFor(x => x.ProfileTypeID, new SelectList(ViewBag.ProfileTypeList, "Id", "Name"), new { @class = "form-control", @required = "required",onChange="ShowHidePageIdControl()" })
                 </div>
             </div>
-            @*<div class="form-group row">
+            <div class="form-group row" id="divpageid">
                 <div class="col-md-3">
-                    aap
-                        Username
+                    PageId:
                 </div>
                 <div class="col-md-9">
-                    @Html.TextBoxFor(x => x.Username, new { @class = "form-control", @required = "required" })
+                    @Html.TextBoxFor(x => x.PageId, new { @class = "form-control" })
                 </div>
             </div>
-            *@
+
             <div class="form-group row">
                 <div class="col-md-3"></div>
                 <div class="col-md-9">
@@ -100,6 +134,8 @@
     //    $("#Username").val(username);
     //    $("#Id").val(id)
     //}
+    
+    // DELETE THE PROFILE
     function DeleteProfile(id) {
         if (confirm("Do you want to delete record?"))
             location.href = "/Profile/Delete/" + id;
@@ -135,34 +171,76 @@
         });
     }
 
-    function RegisterUser(data) {
-        var stringdata = JSON.stringify(data);
-        $.ajax({
-            type: "POST",
-            url: "/Profile/Add",
-            data: { stringdata: stringdata },
-            dataType: "json",
-            success: function (response) {
+    //function RegisterUser(data) {
+    //    var stringdata = JSON.stringify(data);
+    //    $.ajax({
+    //        type: "POST",
+    //        url: "/Profile/Add",
+    //        data: { stringdata: stringdata },
+    //        dataType: "json",
+    //        success: function (response) {
                 
-                if (response == "Success") {
-                    location.reload();
-                }
-                else if (response == "Already Exist")
-                {
-                    alert("User already exists");
-                }
+    //            if (response == "Success") {
+    //                location.reload();
+    //            }
+    //            else if (response == "Already Exist")
+    //            {
+    //                alert("User already exists");
+    //            }
 
-            },
-            error: function (err) {
-                alert("User was  not registered")
-            }
-        });
-    }
+    //        },
+    //        error: function (err) {
+    //            alert("User was  not registered")
+    //        }
+    //    });
+    //}
  
     $(document).ready(function () {
+       
         if(location.href.indexOf('#access_token=')>0)
         {
-            location.href=location.href.replace('#','');
+            var url =location.href.replace('#','&');
+            location.href=url;
         }
     });
+   
+    // SAVE THE SERVICE INTERVAL FOR POST
+    function SaveServiceInterval() {
+     
+        var inertvaltime = $("#serviceinterval").val().trim();
+        var reg = new RegExp('^[0-9]+$');
+        var match=reg.test($("#serviceinterval").val().trim());
+        if( $("#serviceinterval").val()&& match)
+        {
+            $.ajax({
+                type: "POST",
+                url: "/Profile/SaveInterval",
+                data: { inertvaltime:  inertvaltime },
+                dataType: "json",
+                success: function (response) {
+                    alert("Service interval saved");
+                    $(".close").click();
+                },
+                error: function (err) {
+                    alert("Service interval not saved")
+                }
+            });
+        }
+      
+        else
+        {
+            alert("Invalid input");
+        }
+    }
+    
+    function ShowHidePageIdControl() {
+        if($("#ProfileTypeID").val()=="1")
+        {
+            $("#divpageid").show();
+         
+        }
+        else{
+            $("#divpageid").hide();
+        }
+    }
 </script>
