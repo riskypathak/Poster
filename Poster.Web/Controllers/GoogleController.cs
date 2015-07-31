@@ -18,9 +18,13 @@ namespace Poster.Web.Controllers
     {
         //
         // GET: /Google/
+        private string GoogleClientID = string.Empty;
+        private string ClientSecret = string.Empty;
 
         public ActionResult Index()
         {
+            GoogleClientID = ConfigurationManager.AppSettings["ClientId"].ToString();
+            ClientSecret = ConfigurationManager.AppSettings["ClientSecret"].ToString();
             if (Request.QueryString["code"] != null)
             {
                 GetToken();
@@ -35,7 +39,13 @@ namespace Poster.Web.Controllers
 
         private void SetGooglePagePermissions()
         {
-            string url = "https://accounts.google.com/o/oauth2/auth?request_visible_actions=http://schemas.google.com/AddActivity&access_type=offline&response_type=code&client_id=9231245845-kmqb43s9q0o8apppcvg0d4in7c4em291.apps.googleusercontent.com&redirect_uri=http://localhost:20659/Google/Index/&scope=https://www.googleapis.com/auth/plus.login";
+#if DEBUG
+            string url = "https://accounts.google.com/o/oauth2/auth?request_visible_actions=http://schemas.google.com/AddActivity&access_type=offline&response_type=code&client_id=" + GoogleClientID + "&redirect_uri=http://localhost:20659/Google/Index/&scope=https://www.googleapis.com/auth/plus.login";
+#else
+            string url = "https://accounts.google.com/o/oauth2/auth?request_visible_actions=http://schemas.google.com/AddActivity&access_type=offline&response_type=code&client_id=" + GoogleClientID + "&redirect_uri=http://188.42.227.39/Poster/Google/Index&scope=https://www.googleapis.com/auth/plus.login";
+#endif
+
+
             Response.Redirect(url);
 
         }
@@ -43,7 +53,12 @@ namespace Poster.Web.Controllers
         {
             string code = Request.QueryString["code"];
             var request = (HttpWebRequest)WebRequest.Create("https://accounts.google.com/o/oauth2/token");
-            var postData = "code=" + code + "&redirect_uri=http://localhost:20659/Google/Index/&scope=https://www.googleapis.com/auth/plus.login&grant_type=authorization_code&client_id=9231245845-kmqb43s9q0o8apppcvg0d4in7c4em291.apps.googleusercontent.com&client_secret=Vxg-lRDr6rN6ncwCm73mLKh2";
+            //
+#if DEBUG
+            var postData = "code=" + code + "&redirect_uri=http://localhost:20659/Google/Index/&scope=https://www.googleapis.com/auth/plus.login&grant_type=authorization_code&client_id=" + GoogleClientID + "&client_secret=" + ClientSecret;
+#else
+            var postData = "code=" + code + "&redirect_uri=http://188.42.227.39/Poster/Google/Index&scope=https://www.googleapis.com/auth/plus.login&grant_type=authorization_code&client_id=" + GoogleClientID + "&client_secret="+ClientSecret;
+#endif
             var data = Encoding.ASCII.GetBytes(postData);
             request.Method = "POST";
             request.ContentType = "application/x-www-form-urlencoded";

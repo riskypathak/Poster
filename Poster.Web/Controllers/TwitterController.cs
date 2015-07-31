@@ -14,6 +14,7 @@ namespace Poster.Web.Controllers
 {
     public class TwitterController : AsyncController
     {
+        private int ServiceInterval = 10;
         // GET: Twitter
         public ActionResult Index()
         {
@@ -21,16 +22,18 @@ namespace Poster.Web.Controllers
             return View();
         }
 
-        public async Task<ActionResult> BeginAsync()
+        public async Task<ActionResult> BeginAsync(int? serviceInterval)
         {
+            //  ServiceInterval = serviceInterval??10;
+            
             //var auth = new MvcSignInAuthorizer
             var auth = new MvcAuthorizer
             {
-               
+
                 CredentialStore = new SessionStateCredentialStore
                 {
-                    ConsumerKey =ConfigurationManager.AppSettings["ConsumerKey"].ToString(),// "0vbuhbtd8Zz7M121MtxtrA",
-                    ConsumerSecret =ConfigurationManager.AppSettings["ConsumerSecret"].ToString()// "5aj5te5ygcpPCBOMrwvGcjI8GAoAfAZFMlpLhyt2U"
+                    ConsumerKey = ConfigurationManager.AppSettings["ConsumerKey"].ToString(),// "0vbuhbtd8Zz7M121MtxtrA",
+                    ConsumerSecret = ConfigurationManager.AppSettings["ConsumerSecret"].ToString()// "5aj5te5ygcpPCBOMrwvGcjI8GAoAfAZFMlpLhyt2U"
                 }
             };
             string twitterCallbackUrl = Request.Url.ToString().Replace("Begin", "Complete");
@@ -39,6 +42,10 @@ namespace Poster.Web.Controllers
 
         public async Task<ActionResult> CompleteAsync()
         {
+            if (Request.QueryString["serviceInterval"] != null)
+            {
+                ServiceInterval = Convert.ToInt32(Request.QueryString["serviceInterval"]);
+            }
             var auth = new MvcAuthorizer
             {
                 CredentialStore = new SessionStateCredentialStore
@@ -57,6 +64,7 @@ namespace Poster.Web.Controllers
             model.Username = credentials.ScreenName;
             model.UserId = credentials.UserID.ToString();
             model.ProfileTypeID = 3;
+            model.Interval = ServiceInterval;
             SaveTwitterInfo(model);
             return RedirectToAction("Index", "Profile");
         }

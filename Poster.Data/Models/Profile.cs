@@ -21,6 +21,6 @@ namespace Poster.Data.Models
         public string PageId { get; set; }
         public string TokenSecret { get; set; }
         public string RefreshToken { get; set; }
-
+        public int Interval { get; set; }
     }
 }

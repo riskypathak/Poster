@@ -3,53 +3,26 @@
     ViewBag.Title = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
     var userProfileList = ViewBag.userProfileList;
+
 }
 
 <h2>Profile</h2>
-@using (Html.BeginForm("Add", "Profile", FormMethod.Post))
+@using (Html.BeginForm("Add", "Profile", FormMethod.Post, new { id ="profileform"}))
 {
     <div class="panel panel-default">
         <div class="panel-heading">Add Profile</div>
         <div class="panel-body">
             <div class="form-group row">
-                <button type="button" class="btn btn-info btn-sm pull-right" style="margin-right: 20px;" data-toggle="modal" data-target="#myModal">Set Service Interval</button>
-                <!-- Modal -->
-                <div id="myModal" class="modal fade" role="dialog">
-                    <div class="modal-dialog">
-                        <!-- Modal content-->
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <button type="button" class="close" data-dismiss="modal">&times;</button>
-                                <h4 class="modal-title">Service Interval</h4>
-                            </div>
-                            <div class="modal-body">
-                                <div class="form-group row">
-                                    <div class="col-md-3">Time(In Minutes):</div>
-                                    <div class="col-md-9">
-                                        <input type="text" name="name" id="serviceinterval" value=" " />
-                                    </div>
-                                </div>
-                                <div class="form-group row">
-                                    <div class="col-md-3"></div>
-                                    <div class="col-md-9">
-                                        <input type="button" name="name" value="Save" onclick="SaveServiceInterval()" />
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="modal-footer">
-                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!--Modal HTML end-->
-            </div>
-
-
-            <div class="form-group row">
                 <div class="col-md-3">Profile Type:</div>
                 <div class="col-md-9">
                     @Html.DropDownListFor(x => x.ProfileTypeID, new SelectList(ViewBag.ProfileTypeList, "Id", "Name"), new { @class = "form-control", @required = "required",onChange="ShowHidePageIdControl()" })
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-md-3">Time(In Minutes):</div>
+                <div class="col-md-9">
+                    @Html.TextBoxFor(x => x.Interval, new { @class = "form-control",required="required",@type="number" })
+                    
                 </div>
             </div>
             <div class="form-group row" id="divpageid">
@@ -57,7 +30,7 @@
                     PageId:
                 </div>
                 <div class="col-md-9">
-                    @Html.TextBoxFor(x => x.PageId, new { @class = "form-control" })
+                    @Html.TextBoxFor(x => x.PageId, new { @class = "form-control",required="required" })
                 </div>
             </div>
 
@@ -138,7 +111,7 @@
     // DELETE THE PROFILE
     function DeleteProfile(id) {
         if (confirm("Do you want to delete record?"))
-            location.href = "/Profile/Delete/" + id;
+            location.href = "../Profile/Delete/" + id;
     }
 
     //Facebook Login
@@ -236,10 +209,11 @@
     function ShowHidePageIdControl() {
         if($("#ProfileTypeID").val()=="1")
         {
+            $("#profileform").removeAttr("novalidate");
             $("#divpageid").show();
-         
         }
         else{
+            $("#profileform").attr("novalidate","novalidate");
             $("#divpageid").hide();
         }
     }
