@@ -1,0 +1,69 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@using (Html.BeginForm("ImagePost", "BulkImport", FormMethod.Post, new { id ="form",enctype="multipart/form-data"}))
+{
+<input type="hidden" name="hdnType" value=" " />
+<div class="panel panel-default">
+    <div class="panel-heading">Bulk Image upload</div>
+    <div class="panel-body">
+        <div class="form-group row">
+            <div class="col-md-3">
+                Select File:
+            </div>
+            <div class="col-md-9">
+                <input type="file" id="imgupload" multiple="multiple" name="imgupload" value=" " />
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-md-3">
+                Group Name:
+            </div>
+            <div class="col-md-9">
+                <input type="text" id="imggroupname" name="imggroupname" value=" " />
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-md-3">
+            </div>
+            <div class="col-md-9">
+                <input type="submit" id="btntext" name="name" class="btn btn-default" value="Save" />
+            </div>
+        </div>
+    </div>
+</div>
+}
+@using (Html.BeginForm("TextPost", "BulkImport", FormMethod.Post, new { id ="textform",enctype="multipart/form-data"}))
+{
+<div class="panel panel-default">
+    <div class="panel-heading">Bulk Text upload</div>
+
+    <div class="panel-body">
+        <div class="form-group row">
+            <div class="col-md-3">
+                Select File:
+            </div>
+            <div class="col-md-9">
+                <input type="file" id="textupload" name="textupload" value=" " />
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-md-3">
+                Group Name:
+            </div>
+            <div class="col-md-9">
+                <input type="text" id="textgroupname" name="textgroupname" value=" " />
+            </div>
+        </div>
+        <div class="form-group row">
+            <div class="col-md-3">
+            </div>
+            <div class="col-md-9">
+                <input type="submit" id="btntext" name="name" class="btn btn-default" value="Save" />
+            </div>
+        </div>
+    </div>
+</div>
+}

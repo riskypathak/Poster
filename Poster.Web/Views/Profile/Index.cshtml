@@ -70,6 +70,7 @@
                         <td>@item.Username
                         </td>
                         <td>
+                            <input type="button" name="name" onclick="EditProfile(@item.ProfileTypeID,'@item.PageId',@item.Id,@item.Interval)" class="btn btn-primary" value="Edit" />
                             <input type="button" name="name" onclick="DeleteProfile(@item.Id)" class="btn btn-primary" value="Unregister" />
                         </td>
                     </tr>
@@ -81,32 +82,18 @@
         </div>
     </div>
 }
-@*<script src="//connect.facebook.net/en_US/all.js"></script>*@
-<script>
-   
-    window.fbAsyncInit = function () {
-        FB.init({
-            appId: '1643946982507030',
-            xfbml: true,
-            version: 'v2.4'
-        });
-    };
 
-    (function (d, s, id) {
-        var js, fjs = d.getElementsByTagName(s)[0];
-        if (d.getElementById(id)) { return; }
-        js = d.createElement(s); js.id = id;
-        js.src = "//connect.facebook.net/en_US/sdk.js";
-        fjs.parentNode.insertBefore(js, fjs);
-    }(document, 'script', 'facebook-jssdk'));
-</script>
 <script>
     //EDIT CODE COMMENTED
-    //function EditProfile(profileTypeid, username, id) {
-    //    $("#ProfileTypeID").val(profileTypeid);
-    //    $("#Username").val(username);
-    //    $("#Id").val(id)
-    //}
+    function EditProfile(profileTypeid, pageid, id,interval) {
+        debugger;
+        $("#ProfileTypeID").val(profileTypeid);
+        $("#PageId").val(pageid);
+        $("#Interval").val(interval);
+        $("#Id").val(id);
+        ShowHidePageIdControl();
+        $("#ProfileTypeID").attr('disabled','disabled');
+    }
     
     // DELETE THE PROFILE
     function DeleteProfile(id) {
@@ -117,7 +104,7 @@
     //Facebook Login
     function fbLogin() {
         FB.login(function (response) {
-            debugger;
+          
             var userId, accessToken, userName;
             var data = {};
             if (response.authResponse) {

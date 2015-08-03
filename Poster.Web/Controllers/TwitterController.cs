@@ -25,7 +25,7 @@ namespace Poster.Web.Controllers
         public async Task<ActionResult> BeginAsync(int? serviceInterval)
         {
             //  ServiceInterval = serviceInterval??10;
-            
+
             //var auth = new MvcSignInAuthorizer
             var auth = new MvcAuthorizer
             {
@@ -50,8 +50,8 @@ namespace Poster.Web.Controllers
             {
                 CredentialStore = new SessionStateCredentialStore
                 {
-                    ConsumerKey = "0vbuhbtd8Zz7M121MtxtrA",
-                    ConsumerSecret = "5aj5te5ygcpPCBOMrwvGcjI8GAoAfAZFMlpLhyt2U"
+                    ConsumerKey = ConfigurationManager.AppSettings["ConsumerKey"].ToString(),
+                    ConsumerSecret = ConfigurationManager.AppSettings["ConsumerSecret"].ToString()
                 }
             };
 

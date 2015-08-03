@@ -28,6 +28,7 @@ namespace Poster.Web.Controllers
         private string PageId = string.Empty;
         private int ProfileTypeId = 0;
         private int ServiceInterval = 10;
+        private string baseurl = "http://188.42.227.39/Poster/";
         //
         // GET: /Profile/
         [Authorize]
@@ -61,6 +62,9 @@ namespace Poster.Web.Controllers
                     {
                         Id = x.Id,
                         Username = x.Username,
+                        PageId=x.PageId,
+                        Interval=x.Interval,
+                        ProfileTypeID=x.ProfileTypeID,
                         ProfileName = db.LoadSelect<ProfileType>().Where(u => u.Id == x.ProfileTypeID).FirstOrDefault()
                     }).ToList();
                     ViewBag.userProfileList = result;
@@ -203,7 +207,7 @@ namespace Poster.Web.Controllers
 #if DEBUG
             string url = "https://www.facebook.com/dialog/oauth?client_id=1643946982507030&redirect_uri=http://localhost:20659/Profile/Index?pageid=" + PageId + "|" + ServiceInterval + "&profiletype=1&response_type=token&scope=manage_pages,publish_pages,publish_actions";
 #else
-            string url = "https://www.facebook.com/dialog/oauth?client_id=1643946982507030&redirect_uri=http://188.42.227.39/Poster/Profile/Index?pageid=" + PageId + "&profiletype=1&response_type=token&scope=manage_pages,publish_pages,publish_actions";
+            string url = "https://www.facebook.com/dialog/oauth?client_id=1643946982507030&redirect_uri=http://188.42.227.39/Poster/Profile/Index?pageid=" + PageId+ "|" + ServiceInterval  + "&profiletype=1&response_type=token&scope=manage_pages,publish_pages,publish_actions";
 #endif
             Response.Redirect(url);
 
@@ -335,7 +339,7 @@ namespace Poster.Web.Controllers
             if (PhotoPath != null && PhotoPath.ContentLength > 0)
                 try
                 {
-                    string path = Path.Combine("/Images", DateTime.Now.ToString("ddMMyyyyhhmm") + Path.GetFileName(PhotoPath.FileName));
+                    string path = Path.Combine("../Images", DateTime.Now.ToString("ddMMyyyyhhmm") + Path.GetFileName(PhotoPath.FileName));
                     ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
                     using (IDbConnection db = dbFactory.Open())
                     {
@@ -406,7 +410,7 @@ namespace Poster.Web.Controllers
                     if (post != null)
                     {
                         string photoPath = post.FirstOrDefault().PhotoPath;
-                        System.IO.File.Delete(Server.MapPath(photoPath));
+                        System.IO.File.Delete(baseurl + photoPath.Substring(3, photoPath.Length - 3));
                         db.DeleteById<Post>(id);
                     }
                 }
@@ -417,6 +421,20 @@ namespace Poster.Web.Controllers
                 throw ex;
             }
         }
+
+        private void UpdateProfile(Profile model)
+        {
+            ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
+            using (IDbConnection db = dbFactory.Open())
+            {
+                var existingRecord = db.Select<Profile>().Where(x => x.Id == model.Id).FirstOrDefault();
+                existingRecord.Interval = model.Interval;
+                existingRecord.PageId = model.PageId;
+                db.Update<Profile>(existingRecord);
+                
+            }
+        }
+
 
     }
 }

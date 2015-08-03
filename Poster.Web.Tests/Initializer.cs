@@ -28,6 +28,8 @@ namespace Poster.Web.Tests
                 db.InsertAll<ProfileType>(GetProfileTypes());
                 //db.DropAndCreateTable<Config>();
                 db.DropAndCreateTable<Post>();
+                db.DropAndCreateTable<PostImage>();
+                db.DropAndCreateTable<PostText>();
                 //db.InsertAll<Post>(GetPhotos());
             }
         }
