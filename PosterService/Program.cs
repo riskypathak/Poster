@@ -32,10 +32,10 @@ namespace PosterService
 
             service.Stop();
 #else
-            ServiceBase.Run(new ServiceBase[] { service });
+                        ServiceBase.Run(new ServiceBase[] { service });
 #endif
 
-           
+
 
         }
     }

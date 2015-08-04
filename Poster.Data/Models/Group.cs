@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace Poster.Data.Models
 {
-    public class PostText : DBEntity
+   public class Group:DBEntity  
     {
-        public int GroupId { get; set; }
-        public string Text { get; set; }
-
+        public string Name { get; set; }
+        public string Type { get; set; }
     }
 }

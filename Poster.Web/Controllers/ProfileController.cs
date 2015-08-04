@@ -62,12 +62,23 @@ namespace Poster.Web.Controllers
                     {
                         Id = x.Id,
                         Username = x.Username,
-                        PageId=x.PageId,
-                        Interval=x.Interval,
-                        ProfileTypeID=x.ProfileTypeID,
+                        PageId = x.PageId,
+                        Interval = x.Interval,
+                        ProfileTypeID = x.ProfileTypeID,
                         ProfileName = db.LoadSelect<ProfileType>().Where(u => u.Id == x.ProfileTypeID).FirstOrDefault()
                     }).ToList();
+                    var ImageGroups = db.Where<ProfileImageGroup>("ProfileID", "img");
+                    var TextGroups = db.Where<ProfileTextGroup>("ProfileID", "img");
+                    List<int> imgGroupIds = new List<int>();
+                    List<int> txtGroupIds = new List<int>();
+                    ImageGroups.ForEach(x =>
+                    {
+                        imgGroupIds.Add(x.Id);
+                    });
                     ViewBag.userProfileList = result;
+                    ViewBag.ImageGroups = new MultiSelectList(db.Where<Group>("Type", "img"), "Id", "Name");
+                    ViewBag.TextGroups = new MultiSelectList(db.Where<Group>("Type", "txt"), "Id", "Name");
+                    // ViewBag.ImageGroups = new MultiSelectList(db.Select<PostImage>(), "Id", "Group");
                     //var serviceInterval = db.Select<Config>();
                     //if (serviceInterval.Count > 0)
                     //{
@@ -97,7 +108,7 @@ namespace Poster.Web.Controllers
             return View();
         }
         [HttpPost]
-        public ActionResult Add()
+        public ActionResult Add(Profile model)
         {
             try
             {
@@ -424,6 +435,12 @@ namespace Poster.Web.Controllers
 
         private void UpdateProfile(Profile model)
         {
+
+        }
+        [Authorize]
+        [HttpPost]
+        public ActionResult Update(Profile model, int[] ImgGroups, int[] textGroups)
+        {
             ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
             using (IDbConnection db = dbFactory.Open())
             {
@@ -431,10 +448,95 @@ namespace Poster.Web.Controllers
                 existingRecord.Interval = model.Interval;
                 existingRecord.PageId = model.PageId;
                 db.Update<Profile>(existingRecord);
-                
+                AddImageGroup(db, ImgGroups, model.Id);
+                AddTextGroup(db, textGroups, model.Id);
+
             }
+
+            return RedirectToAction("Index"); ;
+
+        }
+        private void AddImageGroup(IDbConnection db, int[] ImgGroups, int ProfileId)
+        {
+            try
+            {
+                var imagerecords = db.Where<ProfileImageGroup>("ProfileID", ProfileId);
+                imagerecords.ForEach(x =>
+                {
+                    db.DeleteById<ProfileImageGroup>(x.Id);
+
+                });
+                foreach (int item in ImgGroups)
+                {
+                    ProfileImageGroup pig = new ProfileImageGroup();
+                    pig.GroupID = item;
+                    pig.ProfileID = ProfileId;
+                    db.Insert<ProfileImageGroup>(pig);
+                }
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+
         }
 
+        private void AddTextGroup(IDbConnection db, int[] textGroups, int ProfileId)
+        {
+            try
+            {
+                var imagerecords = db.Where<ProfileTextGroup>("ProfileID", ProfileId);
+                imagerecords.ForEach(x =>
+                {
+                    db.DeleteById<ProfileTextGroup>(x.Id);
+
+                });
+                foreach (int item in textGroups)
+                {
+                    ProfileTextGroup pig = new ProfileTextGroup();
+                    pig.GroupID = item;
+                    pig.ProfileID = ProfileId;
+                    db.Insert<ProfileTextGroup>(pig);
+                }
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+
+
+        }
+
+        public ActionResult GetSelectedGroups(string profileId)
+        {
+            ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
+            JavaScriptSerializer jss = new JavaScriptSerializer();
+            string response = string.Empty;
+            using (IDbConnection db = dbFactory.Open())
+            {
+                var ImageGroups = db.Where<ProfileImageGroup>("ProfileID", Convert.ToInt32(profileId));
+                var TextGroups = db.Where<ProfileTextGroup>("ProfileID", Convert.ToInt32(profileId));
+                string imgGroupIds = string.Empty;
+                string txtGroupIds = string.Empty;
+                ImageGroups.ForEach(x =>
+                {
+                    imgGroupIds += x.GroupID + ",";
+                });
+                TextGroups.ForEach(x =>
+                {
+                    txtGroupIds += x.GroupID + ",";
+                });
+                imgGroupIds = imgGroupIds.Substring(0, imgGroupIds.Length - 1);
+                txtGroupIds = txtGroupIds.Substring(0, txtGroupIds.Length - 1);
+                response = imgGroupIds + "||" + txtGroupIds;
+            }
+            return Json(jss.Serialize(response));
+        }
 
     }
 }

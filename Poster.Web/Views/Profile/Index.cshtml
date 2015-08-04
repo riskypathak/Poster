@@ -13,26 +13,40 @@
         <div class="panel-heading">Add Profile</div>
         <div class="panel-body">
             <div class="form-group row">
-                <div class="col-md-3">Profile Type:</div>
+                <div class=" control-label  col-md-3">Profile Type:</div>
                 <div class="col-md-9">
                     @Html.DropDownListFor(x => x.ProfileTypeID, new SelectList(ViewBag.ProfileTypeList, "Id", "Name"), new { @class = "form-control", @required = "required",onChange="ShowHidePageIdControl()" })
                 </div>
             </div>
             <div class="form-group row">
-                <div class="col-md-3">Time(In Minutes):</div>
+                <div class="control-label  col-md-3">Time(In Minutes):</div>
                 <div class="col-md-9">
                     @Html.TextBoxFor(x => x.Interval, new { @class = "form-control",required="required",@type="number" })
                     
                 </div>
             </div>
             <div class="form-group row" id="divpageid">
-                <div class="col-md-3">
+                <div class="control-label col-sm-3">
                     PageId:
                 </div>
                 <div class="col-md-9">
                     @Html.TextBoxFor(x => x.PageId, new { @class = "form-control",required="required" })
                 </div>
             </div>
+            <div class="form-group row" id="divimagegroup" style="display: none">
+                <label class="control-label col-sm-3">Image Groups :</label>
+                <div class="col-sm-9">
+                    @Html.ListBox("ImgGroups", (MultiSelectList)ViewBag.ImageGroups, new { @class = "form-control"})
+                </div>
+            </div>
+
+            <div class="form-group row" id="divtextgroup" style="display: none">
+                <label class="control-label col-sm-3" for="email">Text Groups :</label>
+                <div class="col-sm-9">
+                    @Html.ListBox("textGroups", (MultiSelectList)ViewBag.TextGroups, new { @class = "form-control" })
+                </div>
+            </div>
+
 
             <div class="form-group row">
                 <div class="col-md-3"></div>
@@ -93,6 +107,31 @@
         $("#Id").val(id);
         ShowHidePageIdControl();
         $("#ProfileTypeID").attr('disabled','disabled');
+        $("#divimagegroup").show();
+        $("#divtextgroup").show();
+        $("#profileform").attr('action','/Profile/Update');
+        SetSelectedGroup(id);
+    }
+
+    function SetSelectedGroup(id) {
+        var profileId = JSON.stringify(id);
+        $.ajax({
+            type: "POST",
+            url: "/Profile/GetSelectedGroups",
+            data: { profileId: profileId },
+            dataType: "json",
+            success: function (response) {
+                debugger;
+                var values=JSON.parse(response);
+                var imgIds=values.split("||")[0].split(",");
+                var txtIds=values.split("||")[1].split(",");
+                $("#ImgGroups").val(imgIds);
+                $("#textGroups").val(txtIds);
+            },
+            error: function (err) {
+                alert("Error")
+            }
+        });
     }
     
     // DELETE THE PROFILE

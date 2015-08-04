@@ -8,7 +8,7 @@ namespace Poster.Data.Models
 {
     public class PostImage:DBEntity
     {
-        public string Group { get; set; }
+        public int GroupId { get; set; }
         public string Imagelink { get; set; }
     }
 }

@@ -30,6 +30,9 @@ namespace Poster.Web.Tests
                 db.DropAndCreateTable<Post>();
                 db.DropAndCreateTable<PostImage>();
                 db.DropAndCreateTable<PostText>();
+                db.DropAndCreateTable<Group>();
+                db.DropAndCreateTable<ProfileImageGroup>();
+                db.DropAndCreateTable<ProfileTextGroup>();
                 //db.InsertAll<Post>(GetPhotos());
             }
         }

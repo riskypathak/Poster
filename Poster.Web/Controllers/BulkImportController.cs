@@ -16,14 +16,21 @@ namespace Poster.Web.Controllers
         //
         // GET: /BulkImport/
         [HttpGet]
-        public ActionResult Index()
+        public ActionResult Index(string msg)
         {
+            ViewBag.Message = msg;
             return View();
         }
 
         [HttpPost]
         public ActionResult ImagePost()
         {
+            int groupid = CheckAndCreateGroup(Request.Form["imggroupname"], "img");
+            if (groupid == 0)
+            {
+                return RedirectToAction("Index", new { msg = "Exists" });
+            }
+
             string subPath = "/UploadImage"; // your code goes here
             bool exists = System.IO.Directory.Exists(Server.MapPath(subPath));
             string GroupName = Request.Form["imggroupname"];
@@ -32,14 +39,14 @@ namespace Poster.Web.Controllers
                 System.IO.Directory.CreateDirectory(Server.MapPath(subPath));
             string directory = subPath + "/" + GroupName + "_" + DateTime.Now.ToString("yyyyMMddhhmm");
             System.IO.Directory.CreateDirectory(Server.MapPath(directory));
-            for (int i = 0; i < Request.Files.Count ; i++)
+            for (int i = 0; i < Request.Files.Count; i++)
             {
                 HttpPostedFileBase text = Request.Files[i];
                 if (text != null && text.ContentLength > 0)
                 {
                     var fileName = Path.GetFileName(text.FileName);
                     text.SaveAs(Path.Combine(Server.MapPath(directory), fileName));
-                    SaveImagesPathInDB(directory, GroupName);
+                    SaveImagesPathInDB(directory, groupid);
                 }
             }
             return RedirectToAction("Index");
@@ -48,6 +55,11 @@ namespace Poster.Web.Controllers
         [HttpPost]
         public ActionResult TextPost()
         {
+            int groupid = CheckAndCreateGroup(Request.Form["textgroupname"], "txt");
+            if (groupid == 0)
+            {
+                return RedirectToAction("Index", new { msg = "Exists" });
+            }
             string subPath = "/UploadText"; // your code goes here
             bool exists = System.IO.Directory.Exists(Server.MapPath(subPath));
             string GroupName = Request.Form["textgroupname"];
@@ -61,15 +73,15 @@ namespace Poster.Web.Controllers
             {
                 var fileName = Path.GetFileName(text.FileName);
                 text.SaveAs(Path.Combine(Server.MapPath(directory), fileName));
-                SaveTextInDB(directory, GroupName);
+                SaveTextInDB(directory, groupid);
             }
             return RedirectToAction("Index");
         }
 
-        private void SaveTextInDB(string directory, string GroupName)
+        private void SaveTextInDB(string directory, int GroupId)
         {
             var model = new PostText();
-            model.Group = GroupName;
+            model.GroupId = GroupId;
             model.Text = directory;
             ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
             using (IDbConnection db = dbFactory.Open())
@@ -78,15 +90,36 @@ namespace Poster.Web.Controllers
             }
         }
 
-        private void SaveImagesPathInDB(string directory, string GroupName)
+        private void SaveImagesPathInDB(string directory, int GroupId)
         {
             var model = new PostImage();
-            model.Group = GroupName;
+            model.GroupId = GroupId;
             model.Imagelink = directory;
             ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
             using (IDbConnection db = dbFactory.Open())
             {
                 db.Save<PostImage>(model);
+            }
+        }
+
+        private int CheckAndCreateGroup(string GroupName, string Type)
+        {
+            ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
+            using (IDbConnection db = dbFactory.Open())
+            {
+                var isExist = db.Where<Group>("name", GroupName);
+                if (isExist.Count > 0)
+                {
+                    return 0;
+                }
+                else
+                {
+                    var model = new Group();
+                    model.Name = GroupName;
+                    model.Type = Type;
+                    db.Save(model);
+                    return model.Id;
+                }
             }
         }
     }

@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="Models\Config.cs" />
     <Compile Include="Models\DBEntity.cs" />
+    <Compile Include="Models\Group.cs" />
     <Compile Include="Models\Post.cs" />
     <Compile Include="Models\PostImage.cs" />
     <Compile Include="Models\PostText.cs" />
