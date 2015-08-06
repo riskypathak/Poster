@@ -1,70 +1,205 @@
 ﻿@{
     ViewBag.Title = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
+var GroupList=ViewBag.GroupList;
 }
-
-@using (Html.BeginForm("ImagePost", "BulkImport", FormMethod.Post, new { id ="form",enctype="multipart/form-data"}))
+<div class="alert alert-warning" id="alert" style="display: none">
+    <strong>Warning!</strong> Group name already exists.
+</div>
+<div class="alert alert-success" id="success" style="display: none">
+    <strong>Success!</strong> Group added successfully.
+</div>
+<div class="row">
+    <div class="col-md-6">
+        @using (Html.BeginForm("ImagePost", "BulkImport", FormMethod.Post, new { id ="imgform",enctype="multipart/form-data"}))
 {
-<input type="hidden" name="hdnType" value=" " />
-<div>@ViewBag.Message</div>
-<div class="panel panel-default">
-    <div class="panel-heading">Bulk Image upload</div>
-    <div class="panel-body">
-        <div class="form-group row">
-            <div class="col-md-3">
-                Select File:
-            </div>
-            <div class="col-md-9">
-                <input type="file" id="imgupload" multiple="multiple" name="imgupload" value=" " />
+    <input type="hidden" name="hdnType" value=" " />
+
+
+
+        <div class="panel panel-default">
+            <div class="panel-heading">Bulk Image upload</div>
+            <div class="panel-body">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        Group Name:
+                    </div>
+                    <div class="col-md-9">
+                        <input type="text" id="imggroupname" required name="imggroupname" value="" />
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        Select File:
+                    </div>
+                    <div class="col-md-9">
+                        <input type="file" id="imgupload" required="required" onchange="ValidateImage()" multiple="multiple" name="imgupload" value=" " />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                    </div>
+                    <div class="col-md-9">
+                        <input type="submit" id="btntext" onclick="return OverlayImg()" name="name" class="btn btn-default" value="Save" />
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="form-group row">
-            <div class="col-md-3">
-                Group Name:
+        }
+    </div>
+    <div class="col-md-6">
+        @using (Html.BeginForm("TextPost", "BulkImport", FormMethod.Post, new { id ="textform",enctype="multipart/form-data"}))
+{
+    <div class="panel panel-default">
+        <div class="panel-heading">Bulk Text upload</div>
+
+        <div class="panel-body">
+            <div class="form-group row">
+                <div class="col-md-3">
+                    Group Name:
+                </div>
+                <div class="col-md-9">
+                    <input type="text" id="textgroupname" required="required" name="textgroupname" value="" />
+                </div>
             </div>
-            <div class="col-md-9">
-                <input type="text" id="imggroupname" name="imggroupname" value=" " />
+            <div class="form-group row">
+                <div class="col-md-3">
+                    Select File:
+                </div>
+                <div class="col-md-9">
+                    <input type="file" id="textupload" required="required" onchange="ValidateText()" multiple="multiple" name="textupload" value="" />
+                </div>
             </div>
-        </div>
-        <div class="form-group row">
-            <div class="col-md-3">
-            </div>
-            <div class="col-md-9">
-                <input type="submit" id="btntext" name="name" class="btn btn-default" value="Save" />
+            <div class="form-group row">
+                <div class="col-md-3">
+                </div>
+                <div class="col-md-9">
+                    <input type="submit" id="btntext" name="name" onclick="return OverlayTxt()" class="btn btn-default" value="Save" />
+                </div>
             </div>
         </div>
     </div>
-</div>
-}
-@using (Html.BeginForm("TextPost", "BulkImport", FormMethod.Post, new { id ="textform",enctype="multipart/form-data"}))
-{
-<div class="panel panel-default">
-    <div class="panel-heading">Bulk Text upload</div>
-
-    <div class="panel-body">
-        <div class="form-group row">
-            <div class="col-md-3">
-                Select File:
-            </div>
-            <div class="col-md-9">
-                <input type="file" id="textupload" name="textupload" value=" " />
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class="col-md-3">
-                Group Name:
-            </div>
-            <div class="col-md-9">
-                <input type="text" id="textgroupname" name="textgroupname" value=" " />
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class="col-md-3">
-            </div>
-            <div class="col-md-9">
-                <input type="submit" id="btntext" name="name" class="btn btn-default" value="Save" />
-            </div>
-        </div>
+        }
     </div>
 </div>
-}
+<div class="panel panel-default">
+    <div class="panel-heading">Group List</div>
+    <div class="panel-body">
+
+        <table id="ListTable" class="display">
+            <thead>
+                <tr>
+                    <td>Group Name</td>
+                    <td>Type</td>
+                    <td>Action</td>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in GroupList)
+                    {
+                    <tr>
+                        <td>@item.Name
+                        </td>
+                        <td>@Html.Raw(item.Type=="img"?"Image":"Text")
+                        </td>
+                        <td>
+                            <input type="button" name="name" onclick="DeleteGroup(@item.Id)" class="btn btn-primary" value="Delete" />
+                        </td>
+                    </tr>
+
+                }
+            </tbody>
+        </table>
+
+    </div>
+</div>
+<div class="overlay" style="display: none">
+    <div style="left: 40%; z-index: 999; position: absolute; top: 50%;">
+        <img src="~/Content/Images/ajax-loader.gif" alt="Alternate Text" />
+    </div>
+</div>
+<style>
+    .overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        background-color: rgba(0,0,0,0.5); /*dim the background*/
+    }
+</style>
+<script>
+    function OverlayImg()
+    {
+        if( $('#imgform')[0].checkValidity())
+        {
+            $(".overlay").show();
+        }
+        return true;
+    }
+    function OverlayTxt()
+    {
+        if( $('#textform')[0].checkValidity())
+        {
+            $(".overlay").show();
+        }
+        return true;
+    }
+    function ValidateText() {
+     
+        var regex=new RegExp("^.*\.(txt|TXT)$");
+        var files = $('#textupload').prop("files");
+        var names = $.map(files, function(val) { return val.name; });
+        for (var i = 0; i < names.length; i++) {
+            if(!regex.test(names[i]))
+            {
+                $('#textupload').val("");
+                alert("All files should be in text format");
+                return;
+            }
+        }
+      
+    } 
+
+    function ValidateImage() {
+       
+        var regex=new RegExp("^.*\.(jpg|JPG|gif|GIF|png|PNG)$");
+        var files = $('#imgupload').prop("files");
+        var names = $.map(files, function(val) { return val.name; });
+        for (var i = 0; i < names.length; i++) {
+            if(!regex.test(names[i]))
+            {
+                $('#imgupload').val("");
+                alert("All files should be in image format");
+                return;
+            }
+        }
+    } 
+
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+    var msg = getParameterByName('msg');
+    if (msg == "Exists") {
+        $("#alert").show();
+        setTimeout(' $("#alert").hide("300");', 5000);
+    }
+    if(msg=="Saved")
+    {
+        $("#success").show();
+        setTimeout(' $("#success").hide("300");', 5000);
+        
+    }
+    function DeleteGroup(id) {
+        if(confirm("Do you want to delete record?"))
+        {
+            location.href = "../BulkImport/Delete/" + id;
+        }
+    }
+
+</script>

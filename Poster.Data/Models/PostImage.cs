@@ -1,4 +1,5 @@
-﻿using System;
+﻿using ServiceStack.DataAnnotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace Poster.Data.Models
 {
     public class PostImage:DBEntity
     {
+        [ForeignKey(typeof(Group), OnDelete = "CASCADE", OnUpdate = "CASCADE")]
         public int GroupId { get; set; }
         public string Imagelink { get; set; }
     }

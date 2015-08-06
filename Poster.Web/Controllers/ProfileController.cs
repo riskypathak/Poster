@@ -34,7 +34,6 @@ namespace Poster.Web.Controllers
         [Authorize]
         public ActionResult Index(string access_token)
         {
-            //getpageTokens();
 
             FacebookClientID = ConfigurationManager.AppSettings["FacebookClientID"].ToString();
             AppSecret = ConfigurationManager.AppSettings["AppSecret"].ToString();
@@ -466,12 +465,15 @@ namespace Poster.Web.Controllers
                     db.DeleteById<ProfileImageGroup>(x.Id);
 
                 });
-                foreach (int item in ImgGroups)
+                if (ImgGroups != null)
                 {
-                    ProfileImageGroup pig = new ProfileImageGroup();
-                    pig.GroupID = item;
-                    pig.ProfileID = ProfileId;
-                    db.Insert<ProfileImageGroup>(pig);
+                    foreach (int item in ImgGroups)
+                    {
+                        ProfileImageGroup pig = new ProfileImageGroup();
+                        pig.GroupID = item;
+                        pig.ProfileID = ProfileId;
+                        db.Insert<ProfileImageGroup>(pig);
+                    }
                 }
 
             }
@@ -494,12 +496,15 @@ namespace Poster.Web.Controllers
                     db.DeleteById<ProfileTextGroup>(x.Id);
 
                 });
-                foreach (int item in textGroups)
+                if (textGroups != null)
                 {
-                    ProfileTextGroup pig = new ProfileTextGroup();
-                    pig.GroupID = item;
-                    pig.ProfileID = ProfileId;
-                    db.Insert<ProfileTextGroup>(pig);
+                    foreach (int item in textGroups)
+                    {
+                        ProfileTextGroup pig = new ProfileTextGroup();
+                        pig.GroupID = item;
+                        pig.ProfileID = ProfileId;
+                        db.Insert<ProfileTextGroup>(pig);
+                    }
                 }
 
             }
@@ -531,8 +536,11 @@ namespace Poster.Web.Controllers
                 {
                     txtGroupIds += x.GroupID + ",";
                 });
-                imgGroupIds = imgGroupIds.Substring(0, imgGroupIds.Length - 1);
-                txtGroupIds = txtGroupIds.Substring(0, txtGroupIds.Length - 1);
+                if (imgGroupIds.Length > 0 || txtGroupIds.Length > 0)
+                {
+                    imgGroupIds = imgGroupIds.Substring(0, imgGroupIds.Length - 1);
+                    txtGroupIds = txtGroupIds.Substring(0, txtGroupIds.Length - 1);
+                }
                 response = imgGroupIds + "||" + txtGroupIds;
             }
             return Json(jss.Serialize(response));

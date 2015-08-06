@@ -27,10 +27,10 @@ namespace Poster.Web.Tests
                 db.DropAndCreateTable<Profile>();
                 db.InsertAll<ProfileType>(GetProfileTypes());
                 //db.DropAndCreateTable<Config>();
+                db.DropAndCreateTable<Group>();
                 db.DropAndCreateTable<Post>();
                 db.DropAndCreateTable<PostImage>();
                 db.DropAndCreateTable<PostText>();
-                db.DropAndCreateTable<Group>();
                 db.DropAndCreateTable<ProfileImageGroup>();
                 db.DropAndCreateTable<ProfileTextGroup>();
                 //db.InsertAll<Post>(GetPhotos());

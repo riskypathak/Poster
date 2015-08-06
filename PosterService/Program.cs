@@ -14,26 +14,25 @@ namespace PosterService
         /// </summary>
         static void Main(string[] args)
         {
-            //ServiceBase[] ServicesToRun;
-            //ServicesToRun = new ServiceBase[] 
-            //{ 
-            //    new Service1() 
-            //};
-            //ServiceBase.Run(ServicesToRun);
+            ServiceBase[] ServicesToRun;
+            ServicesToRun = new ServiceBase[] 
+            { 
+                new Service1() 
+            };
+            ServiceBase.Run(ServicesToRun);
 
 
+//            var service = new Service1();
+//#if DEBUG
+//            service.Start(args);
 
-            var service = new Service1();
-#if DEBUG
-            service.Start(args);
+//            Console.WriteLine("Service started, press any key to kill");
+//            Console.ReadKey();
 
-            Console.WriteLine("Service started, press any key to kill");
-            Console.ReadKey();
-
-            service.Stop();
-#else
-                        ServiceBase.Run(new ServiceBase[] { service });
-#endif
+//            service.Stop();
+//#else
+//                        ServiceBase.Run(new ServiceBase[] { service });
+//#endif
 
 
 

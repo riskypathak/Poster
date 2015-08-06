@@ -109,7 +109,7 @@
         $("#ProfileTypeID").attr('disabled','disabled');
         $("#divimagegroup").show();
         $("#divtextgroup").show();
-        $("#profileform").attr('action','/Profile/Update');
+        $("#profileform").attr('action','../Profile/Update');
         SetSelectedGroup(id);
     }
 
@@ -117,7 +117,7 @@
         var profileId = JSON.stringify(id);
         $.ajax({
             type: "POST",
-            url: "/Profile/GetSelectedGroups",
+            url: "../Profile/GetSelectedGroups",
             data: { profileId: profileId },
             dataType: "json",
             success: function (response) {
@@ -213,7 +213,7 @@
         {
             $.ajax({
                 type: "POST",
-                url: "/Profile/SaveInterval",
+                url: "../Profile/SaveInterval",
                 data: { inertvaltime:  inertvaltime },
                 dataType: "json",
                 success: function (response) {

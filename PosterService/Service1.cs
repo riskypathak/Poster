@@ -17,6 +17,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.ServiceProcess;
+using System.Text;
 using System.Timers;
 namespace PosterService
 {
@@ -27,22 +28,24 @@ namespace PosterService
         private static string filename = "/Images/310720151115Lighthouse.jpg";
         private string filetext = string.Empty;
         private string baseurl = "http://188.42.227.39/Poster/";
+        private static Random rand;
         public Service1()
         {
             InitializeComponent();
+            rand = new Random();
             timer.Interval = 60 * 1000; //1 Minute
 
         }
 
-        public void Start(string[] args)
-        {
-            OnStart(args);
-        }
+        //public void Start(string[] args)
+        //{
+        //    OnStart(args);
+        //}
 
-        public void Stop()
-        {
-            OnStop();
-        }
+        //public void Stop()
+        //{
+        //    OnStop();
+        //}
 
         protected override void OnStart(string[] args)
         {
@@ -50,6 +53,7 @@ namespace PosterService
             Log.WriteLog("Service Statrted");
             timer.Start();
             timer.Elapsed += timer_Elapsed;
+
             Process();
         }
 
@@ -120,8 +124,10 @@ namespace PosterService
             ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
             using (IDbConnection db = dbFactory.Open())
             {
-                var imageGroups = db.Where<ProfileImageGroup>("ProfileID", objprofile.Id).Select(x => x.GroupID).ToList();
+
                 filename = PostImage(objprofile, db);
+                Log.WriteLog(filename);
+                // Log.WriteLog("Error:" + System.IO.File.ReadAllText(PostText(objprofile, db)));
                 filetext = PostText(objprofile, db);
 
             }
@@ -129,43 +135,68 @@ namespace PosterService
         }
         private string PostImage(Profile objprofile, IDbConnection db)
         {
-            var imageGroups = db.Where<ProfileTextGroup>("ProfileID", objprofile.Id).Select(x => x.GroupID).ToList();
-            var rand = new Random();
+            Log.WriteLog("ID:"+objprofile.Id.ToString());
+            var imageGroups = db.Where<ProfileImageGroup>("ProfileID", objprofile.Id).Select(x => x.GroupID).ToList();
+            Log.WriteLog(imageGroups.Count.ToString());
+            string file = string.Empty;
             int group = 0;
-            if (imageGroups.Count > 1)
+            if (imageGroups.Count > 0)
             {
-                group = rand.Next(imageGroups.Count);
-            }
-            else
-            {
-                group = imageGroups[0];
-            }
+                if (imageGroups.Count > 1)
+                {
+                    group = rand.Next(imageGroups.Count);
+                }
+                else
+                {
+                    group = 0;
+                }
 
-            var photoList = db.Where<PostImage>("GroupId", group).ToList();
-            int number = rand.Next(photoList.Count);
-            string path = photoList[number].Imagelink;
-            string file = baseurl + path.Substring(3, path.Length - 3);
+                var photoList = db.Where<PostImage>("GroupId", imageGroups[group]).ToList();
+
+                if (photoList.Count > 0)
+                {
+                    int number = rand.Next(photoList.Count);
+                    string path = photoList[number].Imagelink;
+                    file = baseurl + path.Substring(3, path.Length - 3);
+                }
+            }
             return file;
         }
         private string PostText(Profile objprofile, IDbConnection db)
         {
             var textGroups = db.Where<ProfileTextGroup>("ProfileID", objprofile.Id).Select(x => x.GroupID).ToList();
-            var rand = new Random();
+            string text = string.Empty;
             int group = 0;
-            if (textGroups.Count > 1)
+            if (textGroups.Count > 0)
             {
-                group = rand.Next(textGroups.Count);
-            }
-            else
-            {
-                group = textGroups[0];
-            }
+                if (textGroups.Count > 1)
+                {
+                    group = rand.Next(textGroups.Count);
+                }
+                else
+                {
+                    group = 0;
+                }
 
-            var textList = db.Where<PostText>("GroupId", group).ToList();
-            int number = rand.Next(textList.Count);
-            string path = textList[number].Text;
-            string file = baseurl + path.Substring(3, path.Length - 3);
-            return file;
+                var textList = db.Where<PostText>("GroupId", textGroups[group]).ToList();
+                string file = string.Empty;
+                if (textList.Count > 0)
+                {
+                    int number = rand.Next(textList.Count);
+                    string path = textList[number].Text;
+                    file = baseurl + path.Substring(3, path.Length - 3);
+                    Log.WriteLog("text file:" + file);
+                    string destination = Path.GetTempPath() + Guid.NewGuid() + ".txt";
+                    using (WebClient webClient = new WebClient())
+                    {
+                        webClient.DownloadFile(file, destination);
+                    }
+                    text = System.IO.File.ReadAllText(destination);
+                    Log.WriteLog("text file:" + destination);
+                    File.Delete(destination);
+                }
+            }
+            return text;
         }
 
 
@@ -209,23 +240,31 @@ namespace PosterService
             //var registerUsers = GetRegisterUsers();
             //foreach (var item in registerUsers)
             //{
-            var profileType = item.ProfileTypeID;
-            switch (profileType)
+            try
             {
-                case 1: //FACEBOOK CASE
-                    Log.WriteLog("FB Post Statrted");
-                    GetpageTokens(item.AccessToken);
-                    break;
-                case 2:  //GOOGLE CASE'
-                    GooglePost();
-                    break;
-                case 3: //TWITTER CASE
-                    Log.WriteLog("Twitter Post Statrted");
-                    PosterTwitterFromMVC(item);
-                    break;
-                default:
-                    break;
+                var profileType = item.ProfileTypeID;
+                switch (profileType)
+                {
+                    case 1: //FACEBOOK CASE
+                        Log.WriteLog("FB Post Statrted");
+                        GetpageTokens(item.AccessToken, item.PageId);
+                        break;
+                    case 2:  //GOOGLE CASE'
+                        GooglePost();
+                        break;
+                    case 3: //TWITTER CASE
+                        Log.WriteLog("Twitter Post Statrted");
+                        PosterTwitterFromMVC(item);
+                        break;
+                    default:
+                        break;
+                }
             }
+            catch (Exception ex)
+            {
+                Log.WriteLog("Posting Method:" + ex.ToString());
+            }
+
             //}
         }
 
@@ -242,62 +281,87 @@ namespace PosterService
         }
 
         #region FACEBOOK CODE
-        public void GetpageTokens(string AccessToken)
+        public void GetpageTokens(string AccessToken, string pageId)
         {
-            // User Access Token  we got After authorization
-            string UserAccesstoken = AccessToken;
-            string url = string.Format("https://graph.facebook.com/" + "me/accounts?access_token={0}", UserAccesstoken);
-            WebRequest webRequest = WebRequest.Create(url);
-            webRequest.ContentType = "application/x-www-form-urlencoded";
-            webRequest.Method = "Get";
-            var webResponse = webRequest.GetResponse();
-            StreamReader sr = null;
-
-            sr = new StreamReader(webResponse.GetResponseStream());
-            var vdata = new Dictionary<string, string>();
-            string returnvalue = sr.ReadToEnd();
-
-            //using Jobject to parse result
-            JObject mydata = JObject.Parse(returnvalue);
-
-            JArray data = (JArray)mydata["data"];
-            dynamic filterData = new ExpandoObject();
-            for (int i = 0; i < data.Count; i++)
+            try
             {
-                if (data[i].ToList()[4].Last.ToString() == "738024112987033")
+                Log.WriteLog("GetpageTokens Statrted");
+                // User Access Token  we got After authorization
+                string UserAccesstoken = AccessToken;
+                string url = string.Format("https://graph.facebook.com/" + "me/accounts?access_token={0}", UserAccesstoken);
+                WebRequest webRequest = WebRequest.Create(url);
+                webRequest.ContentType = "application/x-www-form-urlencoded";
+                webRequest.Method = "Get";
+                var webResponse = webRequest.GetResponse();
+                StreamReader sr = null;
+
+                sr = new StreamReader(webResponse.GetResponseStream());
+                var vdata = new Dictionary<string, string>();
+                string returnvalue = sr.ReadToEnd();
+
+                //using Jobject to parse result
+                JObject mydata = JObject.Parse(returnvalue);
+
+                JArray data = (JArray)mydata["data"];
+                dynamic filterData = new ExpandoObject();
+                for (int i = 0; i < data.Count; i++)
                 {
-                    PostOnFBPage(data[i], AccessToken);
+                    Log.WriteLog("pageecheck Statrted");
+                    Log.WriteLog("pageId" + pageId);
+
+                    if (data[i].ToList()[4].Last.ToString() == pageId)
+                    {
+                        Log.WriteLog("pageId matched");
+                        PostOnFBPage(data[i], AccessToken);
+                    }
+                    Log.WriteLog("pageId match passed");
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.WriteLog(ex.ToString());
+                throw;
             }
 
 
         }
         public void PostOnFBPage(dynamic obj, string UserAccessToken)
         {
-
-            // string mainaccess = "CAAXXKTvsAhYBABO95ezCqSnKcAiHaZC3spJa8ljgZBSzxfCcyx7dpW1wZCTFN1110uIPUAlEAIDFeHtY5o9qORwTNJAy3tKMIPAR2ClQyL0QgiuWkYZC5xBvON74W7lhwy6EsyoIfKnoxtPdzGUwZAnis6IMJiPEMoVwECirsuKUO5IMeMTTVtx1eKtH8GTNrh0MPrwRZCmZA02l6uHSvLzx9ATq0VaC24ZD";
-            string name = obj.name;
-            string Accesstoken = obj.access_token;
-            string category = obj.category;
-            string id = obj.id;
-            dynamic messagePost = new ExpandoObject();
-            messagePost.access_token = Accesstoken;
-            messagePost.picture = filename;
-            //  ReadImageFile(filename);// "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlKBchID7G2ISdIL4n-L2mmp8TuGZ_7CX26pr8usH2jUGa_0sgQTTomhY";
-            messagePost.message = filetext;
-            FacebookClient app = new FacebookClient(UserAccessToken);
             try
             {
-                var result = app.Post("/" + id + "/feed", messagePost);
-                Log.WriteLog("FB Post Done");
+                Log.WriteLog(UserAccessToken);
+                Log.WriteLog("FileName:"+filename);
+              //  Log.WriteLog(filename);
+                // string mainaccess = "CAAXXKTvsAhYBABO95ezCqSnKcAiHaZC3spJa8ljgZBSzxfCcyx7dpW1wZCTFN1110uIPUAlEAIDFeHtY5o9qORwTNJAy3tKMIPAR2ClQyL0QgiuWkYZC5xBvON74W7lhwy6EsyoIfKnoxtPdzGUwZAnis6IMJiPEMoVwECirsuKUO5IMeMTTVtx1eKtH8GTNrh0MPrwRZCmZA02l6uHSvLzx9ATq0VaC24ZD";
+                string name = obj.name;
+                string Accesstoken = obj.access_token;
+                string category = obj.category;
+                string id = obj.id;
+                dynamic messagePost = new ExpandoObject();
+                messagePost.access_token = Accesstoken;
+                messagePost.picture = filename;
+                //  ReadImageFile(filename);// "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQlKBchID7G2ISdIL4n-L2mmp8TuGZ_7CX26pr8usH2jUGa_0sgQTTomhY";
+                messagePost.message = filetext;
+                FacebookClient app = new FacebookClient(UserAccessToken);
+                try
+                {
+                    var result = app.Post("/" + id + "/feed", messagePost);
+                    Log.WriteLog("FB Post Done");
+                }
+                catch (FacebookOAuthException ex)
+                {
+                    Log.WriteLog(ex.ToString());
+                }
+                catch (FacebookApiException ex)
+                {
+                    Log.WriteLog(ex.ToString());
+                }
+
             }
-            catch (FacebookOAuthException ex)
+            catch (Exception ex)
             {
-                //handle something
-            }
-            catch (FacebookApiException ex)
-            {
-                //handle something else
+
+                Log.WriteLog(ex.ToString());
             }
         }
         #endregion

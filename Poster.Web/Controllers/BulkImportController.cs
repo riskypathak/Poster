@@ -13,12 +13,19 @@ namespace Poster.Web.Controllers
 {
     public class BulkImportController : Controller
     {
+
         //
         // GET: /BulkImport/
         [HttpGet]
         public ActionResult Index(string msg)
         {
+
             ViewBag.Message = msg;
+            ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
+            using (IDbConnection db = dbFactory.Open())
+            {
+                ViewBag.GroupList = db.Select<Group>().ToList();
+            }
             return View();
         }
 
@@ -31,13 +38,13 @@ namespace Poster.Web.Controllers
                 return RedirectToAction("Index", new { msg = "Exists" });
             }
 
-            string subPath = "/UploadImage"; // your code goes here
+            string subPath = "../UploadImage"; // your code goes here
             bool exists = System.IO.Directory.Exists(Server.MapPath(subPath));
-            string GroupName = Request.Form["imggroupname"];
+            string GroupName = Request.Form["imggroupname"].Trim();
 
             if (!exists)
                 System.IO.Directory.CreateDirectory(Server.MapPath(subPath));
-            string directory = subPath + "/" + GroupName + "_" + DateTime.Now.ToString("yyyyMMddhhmm");
+            string directory = subPath + "/" + GroupName;
             System.IO.Directory.CreateDirectory(Server.MapPath(directory));
             for (int i = 0; i < Request.Files.Count; i++)
             {
@@ -46,10 +53,10 @@ namespace Poster.Web.Controllers
                 {
                     var fileName = Path.GetFileName(text.FileName);
                     text.SaveAs(Path.Combine(Server.MapPath(directory), fileName));
-                    SaveImagesPathInDB(directory, groupid);
+                    SaveImagesPathInDB(Path.Combine(directory, fileName), groupid);
                 }
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Index", new { msg = "Saved" });
         }
 
         [HttpPost]
@@ -60,22 +67,31 @@ namespace Poster.Web.Controllers
             {
                 return RedirectToAction("Index", new { msg = "Exists" });
             }
-            string subPath = "/UploadText"; // your code goes here
+            string subPath = "../UploadText"; // your code goes here
             bool exists = System.IO.Directory.Exists(Server.MapPath(subPath));
-            string GroupName = Request.Form["textgroupname"];
+            string GroupName = Request.Form["textgroupname"].Trim();
 
             if (!exists)
                 System.IO.Directory.CreateDirectory(Server.MapPath(subPath));
-            string directory = subPath + "/" + GroupName + "_" + DateTime.Now.ToString("yyyyMMddhhmm");
+            string directory = subPath + "/" + GroupName;
             System.IO.Directory.CreateDirectory(Server.MapPath(directory));
-            HttpPostedFileBase text = Request.Files["textupload"];
-            if (text != null && text.ContentLength > 0)
+            for (int i = 0; i < Request.Files.Count; i++)
             {
-                var fileName = Path.GetFileName(text.FileName);
-                text.SaveAs(Path.Combine(Server.MapPath(directory), fileName));
-                SaveTextInDB(directory, groupid);
+                HttpPostedFileBase text = Request.Files[i];
+                if (text != null && text.ContentLength > 0)
+                {
+                    var fileName = Path.GetFileName(text.FileName);
+                    text.SaveAs(Path.Combine(Server.MapPath(directory), fileName));
+                    SaveTextInDB(Path.Combine(directory, fileName), groupid);
+                }
             }
-            return RedirectToAction("Index");
+            //if (text != null && text.ContentLength > 0)
+            //{
+            //    var fileName = Path.GetFileName(text.FileName);
+            //    text.SaveAs(Path.Combine(Server.MapPath(directory), fileName));
+            //    SaveTextInDB(directory, groupid);
+            //}
+            return RedirectToAction("Index", new { msg = "Saved" });
         }
 
         private void SaveTextInDB(string directory, int GroupId)
@@ -122,5 +138,48 @@ namespace Poster.Web.Controllers
                 }
             }
         }
+
+
+        [Authorize]
+        public ActionResult Delete(int id = 0)
+        {
+            try
+            {
+                ServiceStack.Data.IDbConnectionFactory dbFactory = new OrmLiteConnectionFactory(ConfigurationManager.ConnectionStrings["db"].ConnectionString, MySqlDialect.Provider);
+                using (IDbConnection db = dbFactory.Open())
+                {
+                    DeleteGroupFolder(db, id);
+                    db.DeleteById<Group>(id);
+                }
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        private void DeleteGroupFolder(IDbConnection db, int id)
+        {
+            var selectedGroup = db.Where<Group>("Id", id).FirstOrDefault();
+            string groupName = selectedGroup.Name.Trim();
+            string type = selectedGroup.Type;
+            if (type == "img")
+            {
+                string groupPath = Server.MapPath("~/UploadImage/" + groupName);
+                if (Directory.Exists(groupPath))
+                    Directory.Delete(groupPath, true);
+            }
+            else if (type == "txt")
+            {
+                string groupPath = Server.MapPath("~/UploadText/" + groupName);
+                if (Directory.Exists(groupPath))
+                    Directory.Delete(groupPath, true);
+            }
+
+
+        }
+
+
     }
 }
